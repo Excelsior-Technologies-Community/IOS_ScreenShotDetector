@@ -28,7 +28,7 @@ public struct ToastView: View {
 
 // Screenshot Protection View
 public struct ScreenshotProtectedView<Content: View>: UIViewRepresentable {
-    public typealias UIViewType = ProtectedView
+    public typealias UIViewType = UIView
     
     let content: Content
     
@@ -36,7 +36,7 @@ public struct ScreenshotProtectedView<Content: View>: UIViewRepresentable {
         self.content = content()
     }
     
-    public func makeUIView(context: Context) -> ProtectedView {
+    public func makeUIView(context: Context) -> UIView {
         let protectedView = ProtectedView()
         
         let hostingController = UIHostingController(rootView: content)
@@ -47,13 +47,13 @@ public struct ScreenshotProtectedView<Content: View>: UIViewRepresentable {
         return protectedView
     }
     
-    public func updateUIView(_ uiView: ProtectedView, context: Context) {
+    public func updateUIView(_ uiView: UIView, context: Context) {
         // No-op for now; content is static, but this can be extended as needed.
     }
 }
 
-// Internal UIKit view that hosts the secure content
-final class ProtectedView: UIView {
+// UIKit view that hosts the secure content
+public final class ProtectedView: UIView {
     var contentView: UIView? {
         didSet {
             // Remove old content and add new content when set
