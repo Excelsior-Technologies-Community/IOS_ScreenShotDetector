@@ -1,18 +1,20 @@
 //
 // ScreenshotDetectorHelper.swift
-// ScreenShotDetector
-//
-// Created by Noman Belim on 04/12/25.
+// ScreenshotDetectorKit (Swift Package)
 //
 
 import SwiftUI
 import UIKit
 
-// Simple toast style view
-struct ToastView: View {
-    let message: String
+// MARK: - Public Toast View
+public struct ToastView: View {
+    public let message: String
     
-    var body: some View {
+    public init(message: String) {
+        self.message = message
+    }
+    
+    public var body: some View {
         Text(message)
             .font(.callout)
             .padding(.horizontal, 16)
@@ -24,15 +26,17 @@ struct ToastView: View {
     }
 }
 
-// Screenshot Protection View
-struct ScreenshotProtectedView<Content: View>: UIViewRepresentable {
+// MARK: - Screenshot Protected View
+public struct ScreenshotProtectedView<Content: View>: UIViewRepresentable {
+    public typealias UIViewType = ProtectedView  // ✅ Now valid because ProtectedView is public
+    
     let content: Content
     
-    init(@ViewBuilder content: () -> Content) {
+    public init(@ViewBuilder content: () -> Content) {
         self.content = content()
     }
     
-    func makeUIView(context: Context) -> ProtectedView {
+    public func makeUIView(context: Context) -> ProtectedView {
         let protectedView = ProtectedView()
         
         let hostingController = UIHostingController(rootView: content)
@@ -43,13 +47,15 @@ struct ScreenshotProtectedView<Content: View>: UIViewRepresentable {
         return protectedView
     }
     
-    func updateUIView(_ uiView: ProtectedView, context: Context) {}
+    public func updateUIView(_ uiView: ProtectedView, context: Context) {
+        // Update content if needed
+    }
 }
 
-class ProtectedView: UIView {
-    var contentView: UIView? {
+// MARK: - Protected UIView (Now PUBLIC)
+public final class ProtectedView: UIView {
+    public var contentView: UIView? {
         didSet {
-            // Remove old content and add new content when set
             oldValue?.removeFromSuperview()
             if let newContent = contentView {
                 secureContentView.addSubview(newContent)
@@ -66,9 +72,9 @@ class ProtectedView: UIView {
     }
     
     private let secureTextField = UITextField()
-    private var secureContentView: UIView // This will hold the internal secure view
+    private var secureContentView: UIView
     
-    override init(frame: CGRect) {
+    public override init(frame: CGRect) {
         secureTextField.isSecureTextEntry = true
         guard let internalSecureView = secureTextField.subviews.first else {
             fatalError("Could not find the internal secure view of UITextField.")
@@ -84,11 +90,9 @@ class ProtectedView: UIView {
     }
     
     private func setupSecureLayer() {
-        // 1. Add the UITextField to self
         addSubview(secureTextField)
         sendSubviewToBack(secureTextField)
         
-        // 2. Set the UITextField to cover the entire view
         secureTextField.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             secureTextField.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -97,7 +101,6 @@ class ProtectedView: UIView {
             secureTextField.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
         
-        // 3. Make the internal secure view cover the entire area
         secureContentView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             secureContentView.leadingAnchor.constraint(equalTo: secureTextField.leadingAnchor),
@@ -107,13 +110,134 @@ class ProtectedView: UIView {
         ])
     }
     
-    // The layoutSubviews is no longer strictly necessary because of auto layout
-    // but can be kept for safety/fallback if needed.
-    override func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
-        // Ensure the secureTextField covers the whole area
         secureTextField.frame = bounds
     }
 }
 
+// MARK: - Screenshot Detector View Modifier
+public struct ScreenshotDetectorModifier: ViewModifier {
+    @Binding var showToast: Bool
+    @Binding var toastMessage: String
+    @Binding var isScreenCaptured: Bool
+    
+    public init(showToast: Binding<Bool>, toastMessage: Binding<String>, isScreenCaptured: Binding<Bool>) {
+        self._showToast = showToast
+        self._toastMessage = toastMessage
+        self._isScreenCaptured = isScreenCaptured
+    }
+    
+    public func body(content: Content) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.userDidTakeScreenshotNotification)) { _ in
+                showToastMessage("Screenshot detected - Content Hidden")
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
+                let captured = UIScreen.main.isCaptured
+                isScreenCaptured = captured
+                showToastMessage(captured ? "Screen recording detected" : "Screen recording stopped")
+            }
+    }
+    
+    private func showToastMessage(_ message: String) {
+        toastMessage = message
+        showToast = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            showToast = false
+        }
+    }
+}
 
+// MARK: - View Extension
+public extension View {
+    func detectScreenshots(showToast: Binding<Bool>,
+                          toastMessage: Binding<String>,
+                          isScreenCaptured: Binding<Bool>) -> some View {
+        self.modifier(ScreenshotDetectorModifier(
+            showToast: showToast,
+            toastMessage: toastMessage,
+            isScreenCaptured: isScreenCaptured
+        ))
+    }
+}
+
+// MARK: - Complete Protected Screen View
+public struct ProtectedScreenView<Content: View>: View {
+    @State private var showToast: Bool = false
+    @State private var toastMessage: String = ""
+    @State private var isScreenCaptured: Bool = UIScreen.main.isCaptured
+    
+    let content: Content
+    
+    public init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    public var body: some View {
+        ZStack {
+            if isScreenCaptured {
+                Color.black
+                    .ignoresSafeArea()
+                    .overlay(
+                        VStack {
+                            Image(systemName: "eye.slash.fill")
+                                .font(.system(size: 60))
+                                .foregroundColor(.white)
+                            Text("Screen Recording Detected")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                                .padding(.top)
+                            Text("Content hidden for security")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    )
+            } else {
+                ScreenshotProtectedView {
+                    content
+                }
+                .ignoresSafeArea()
+            }
+            
+            if showToast {
+                VStack {
+                    ToastView(message: toastMessage)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .padding(.top, 40)
+                    Spacer()
+                }
+                .animation(.easeInOut(duration: 0.25), value: showToast)
+            }
+        }
+        .detectScreenshots(
+            showToast: $showToast,
+            toastMessage: $toastMessage,
+            isScreenCaptured: $isScreenCaptured
+        )
+    }
+}
+
+// MARK: - Package.swift Example
+/*
+// swift-tools-version: 5.9
+import PackageDescription
+
+let package = Package(
+    name: "ScreenshotDetectorKit",
+    platforms: [
+        .iOS(.v15)
+    ],
+    products: [
+        .library(
+            name: "ScreenshotDetectorKit",
+            targets: ["ScreenshotDetectorKit"]),
+    ],
+    targets: [
+        .target(
+            name: "ScreenshotDetectorKit",
+            dependencies: [])
+    ]
+)
+*/
