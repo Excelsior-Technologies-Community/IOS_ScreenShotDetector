@@ -1,1 +1,0 @@
-# excelsior-Technologies-Community-IOS_ScreenShotDetector
