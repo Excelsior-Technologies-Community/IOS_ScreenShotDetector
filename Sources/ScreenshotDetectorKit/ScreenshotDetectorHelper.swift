@@ -115,7 +115,7 @@ public final class ProtectedView: UIView {
     }
     
     // Auto layout keeps everything pinned, but keep this as a safety/fallback.
-    override func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
         secureTextField.frame = bounds
     }
