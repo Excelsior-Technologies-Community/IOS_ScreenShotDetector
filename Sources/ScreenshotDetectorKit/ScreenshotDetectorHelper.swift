@@ -52,8 +52,8 @@ public struct ScreenshotProtectedView<Content: View>: UIViewRepresentable {
     }
 }
 
-// Internal UIKit view that hosts the secure content
-final class ProtectedView: UIView {
+// UIKit view that hosts the secure content
+public final class ProtectedView: UIView {
     var contentView: UIView? {
         didSet {
             // Remove old content and add new content when set
