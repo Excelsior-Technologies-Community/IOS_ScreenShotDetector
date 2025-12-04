@@ -4,6 +4,39 @@
 
 ## Quick Start for New Project (Beginner)
 
+### A. Install via GitHub (Swift Package Manager) – Recommended
+
+1. **Add the package dependency**
+   - In Xcode, open the app project.
+   - Go to: `Project Navigator` → click your project name (top) → select your app target.
+   - Open the **Package Dependencies** tab (or `File > Add Packages...`).
+   - Paste your GitHub URL, for example:  
+     - `https://github.com/Excelsior-Technologies-Community/excelsior-Technologies-Community-IOS_ScreenShotDetector.git`
+   - Choose a version rule (e.g. **Up to Next Major Version**), then add the package.
+   - In the dialog, make sure the library product (e.g. `ScreenshotDetectorKit`) is checked for your app target.
+
+2. **Use it in code**
+   - In any SwiftUI file where you want protection:
+
+   ```swift
+   import SwiftUI
+   import ScreenshotDetectorKit
+
+   struct MySecureScreen: View {
+       var body: some View {
+           ScreenshotProtectedView {
+               Text("Secret info")
+           }
+       }
+   }
+   ```
+
+   - That’s all the app developer needs to do: **add the GitHub URL as a package**, then `import ScreenshotDetectorKit` and use `ScreenshotProtectedView` (and optionally `ToastView`).
+
+---
+
+### B. Local file integration (simple copy‑paste option)
+
 1. **Add files to your project**
    - Drag these files into your new SwiftUI app in Xcode:  
      - `ScreenshotDetectorHelper.swift`  
@@ -56,9 +89,10 @@ This project provides a small set of Swift / SwiftUI utilities to:
 - **Hide sensitive UI from screenshots** (by rendering it inside a secure UIKit view).
 - **Detect screenshots and screen recording/mirroring** and show a toast-style message.
 
-All of this is implemented using only the  files:
+All of this is implemented using:
 
-- `ScreenShotDetector/ScreenshotDetectorHelper.swift`
+- `ScreenShotDetector/ScreenshotDetectorHelper.swift` (core helper types)
+- `ScreenShotDetector/HomePage.swift` (example usage screen)
 
 ---
 
@@ -353,5 +387,49 @@ Give this file to any developer and they should be able to:
 - Understand what each component does.
 - Plug `ScreenshotProtectedView` and the screenshot/recording detection into their own SwiftUI screens.
 - Customize the UI and behavior as needed for their app.
+
+---
+
+## 5. Using This as a Dependency (Swift Package) – High Level
+
+If you want other apps to use this via a **dependency** (not by copying files), you can turn the helper into a **Swift Package**:
+
+1. **Create a new Swift Package (library)**
+   - In Xcode: `File > New > Package...`, name it for example `ScreenshotDetectorKit`.
+   - In the package’s `Sources/ScreenshotDetectorKit` folder, add a Swift file and move the code from `ScreenshotDetectorHelper.swift` into it.
+   - Mark the types as `public`, for example:
+
+   ```swift
+   public struct ScreenshotProtectedView<Content: View>: UIViewRepresentable { ... }
+   public struct ToastView: View { ... }
+   public final class ProtectedView: UIView { ... }
+   ```
+
+2. **Host the package in Git (optional but recommended)**
+   - Put the package in a Git repo (e.g. GitHub).
+   - Other developers can then add it using the repo URL.
+
+3. **Add the package to any app**
+   - In the app project: `File > Add Packages...`
+   - Enter the Git URL of your package (or choose a local package folder).
+   - Add the library product (e.g. `ScreenshotDetectorKit`) to the app target.
+
+4. **Use it in the app code**
+   - In any SwiftUI file that should use the protection:
+
+   ```swift
+   import SwiftUI
+   import ScreenshotDetectorKit
+
+   struct MySecureScreen: View {
+       var body: some View {
+           ScreenshotProtectedView {
+               Text("Secret info")
+           }
+       }
+   }
+   ```
+
+This way, other developers only need to **add the Swift Package dependency and import the module**, instead of copying files manually.
 
 
