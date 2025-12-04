@@ -7,16 +7,19 @@
 ### A. Install via GitHub (Swift Package Manager) – Recommended
 
 1. **Add the package dependency**
-   - In Xcode, open the app project.
-   - Go to: `Project Navigator` → click your project name (top) → select your app target.
-   - Open the **Package Dependencies** tab (or `File > Add Packages...`).
-   - Paste your GitHub URL, for example:  
+   - In Xcode, open your app project.
+   - Go to: `Project Navigator` → click your **project name** (top) → select your **app target**.
+   - Open the **Package Dependencies** tab (or use menu `File > Add Packages...`).
+   - In the search field, paste this GitHub URL:
      - `https://github.com/Excelsior-Technologies-Community/excelsior-Technologies-Community-IOS_ScreenShotDetector.git`
-   - Choose a version rule (e.g. **Up to Next Major Version**), then add the package.
-   - In the dialog, make sure the library product (e.g. `ScreenshotDetectorKit`) is checked for your app target.
+   - On the right side:
+     - Set **Dependency Rule** to **Branch**.
+     - Enter **`Mater`** as the branch name.
+   - Click **Add Package**.
+   - In the dialog, make sure the library product **`ScreenshotDetectorKit`** is checked for your app target.
 
-2. **Use it in code**
-   - In any SwiftUI file where you want protection:
+2. **Use it in code (basic example)**
+   - In any SwiftUI file where you want protection, e.g. `MySecureScreen.swift`:
 
    ```swift
    import SwiftUI
@@ -31,7 +34,43 @@
    }
    ```
 
-   - That’s all the app developer needs to do: **add the GitHub URL as a package**, then `import ScreenshotDetectorKit` and use `ScreenshotProtectedView` (and optionally `ToastView`).
+   - That’s all the app developer needs to do for basic protection: **add the GitHub URL as a package**, then `import ScreenshotDetectorKit` and wrap sensitive UI with `ScreenshotProtectedView`.
+
+3. **(Optional) Show your own toast when a screenshot is taken**
+   - If your app already has its own toast system (for example a `ToastManager`), you can listen for the screenshot notification and trigger your toast:
+
+   ```swift
+   import SwiftUI
+   import ScreenshotDetectorKit
+
+   struct ContentView: View {
+       @EnvironmentObject var toast: ToastManager   // your own toast manager
+
+       var body: some View {
+           ScreenshotProtectedView {
+               // Your existing UI
+               ScrollView {
+                   VStack {
+                       Text("Protected Screen")
+                           .font(.title.bold())
+                           .padding(.top, 40)
+                       // ... rest of your content ...
+                   }
+                   .padding()
+               }
+           }
+           .onReceive(
+               NotificationCenter.default.publisher(
+                   for: UIApplication.userDidTakeScreenshotNotification
+               )
+           ) { _ in
+               toast.show(.warning, "Screenshot detected - content is protected")
+           }
+       }
+   }
+   ```
+
+   - Replace `ToastManager` and `toast.show(...)` with whatever toast / banner system your app already uses.
 
 ---
 
