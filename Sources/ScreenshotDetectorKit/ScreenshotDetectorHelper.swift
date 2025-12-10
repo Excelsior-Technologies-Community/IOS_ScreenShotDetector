@@ -27,30 +27,52 @@ public struct ToastView: View {
 }
 
 // Screenshot Protection View
-public struct ScreenshotProtectedView<Content: View>: UIViewRepresentable {
-    public typealias UIViewType = UIView
-    
+public struct ScreenshotProtectedView<Content: View>: View {
+    @StateObject private var detector = ScreenshotDetector()
+    public let content: () -> Content
+
+    public init(@ViewBuilder content: @escaping () -> Content) {
+        self.content = content
+    }
+
+    public var body: some View {
+        ZStack {
+            ProtectedRepresentable(content: content)
+
+            if detector.didTakeScreenshot {
+                ToastView(message: "Screenshot is not allowed!")
+                    .transition(.opacity)
+                    .padding(.top, 50)
+            }
+        }
+        .onAppear {
+            detector.onScreenshot = {
+                print("⚠️ Screenshot Detected!")
+            }
+        }
+    }
+}
+public struct ProtectedRepresentable<Content: View>: UIViewRepresentable {
     let content: Content
     
     public init(@ViewBuilder content: () -> Content) {
         self.content = content()
     }
-    
+
     public func makeUIView(context: Context) -> UIView {
-        let protectedView = ProtectedView()
-        
-        let hostingController = UIHostingController(rootView: content)
-        hostingController.view.backgroundColor = .clear
-        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
-        
-        protectedView.contentView = hostingController.view
-        return protectedView
+        let view = ProtectedView()
+
+        let hosting = UIHostingController(rootView: content)
+        hosting.view.backgroundColor = .clear
+        hosting.view.translatesAutoresizingMaskIntoConstraints = false
+
+        view.contentView = hosting.view
+        return view
     }
-    
-    public func updateUIView(_ uiView: UIView, context: Context) {
-        // No-op for now; content is static, but this can be extended as needed.
-    }
+
+    public func updateUIView(_ uiView: UIView, context: Context) {}
 }
+
 
 // UIKit view that hosts the secure content
 public final class ProtectedView: UIView {
@@ -122,3 +144,28 @@ public final class ProtectedView: UIView {
 }
 
 
+
+// MARK: - Screenshot Detection Listener
+public final class ScreenshotDetector: ObservableObject {
+    @Published public var didTakeScreenshot: Bool = false
+    public var onScreenshot: (() -> Void)?
+
+    public init() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(userDidTakeScreenshot),
+            name: UIApplication.userDidTakeScreenshotNotification,
+            object: nil
+        )
+    }
+
+    @objc private func userDidTakeScreenshot() {
+        didTakeScreenshot = true
+        onScreenshot?()
+        
+        // Auto reset after 1 sec
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            self.didTakeScreenshot = false
+        }
+    }
+}
