@@ -1,5 +1,5 @@
  
-# ✅ **Screenshot & Screen-Recording Protection – Developer Guide **
+#  **Screenshot & Screen-Recording Protection – Developer Guide **
 
 ---
 
@@ -15,7 +15,7 @@
 3. Paste the GitHub URL:
 
 ```
-https://github.com/Excelsior-Technologies-Community/excelsior-Technologies-Community-IOS_ScreenShotDetector.git
+https://github.com/Excelsior-Technologies-Community/IOS_ScreenShotDetector
 ```
 
 4. Set rule to:
@@ -113,7 +113,7 @@ if UIScreen.main.isCaptured {
 
 ---
 
-# 🔍 **Component Overview (Toast-Free Version)**
+#  **Component Overview (Toast-Free Version)**
 
 ## **1. ScreenshotProtectedView**
 
@@ -182,7 +182,7 @@ if UIScreen.main.isCaptured {
 
 ---
 
-# 📘 **How to Integrate Into Another Project**
+#   **How to Integrate Into Another Project**
 
 ### **Step 1 — Add the package** (SPM)
 
@@ -219,7 +219,7 @@ ScreenshotProtectedView {
 
 ---
 
-# ⚠️ **Limitations (iOS Platform Rules)**
+# x **Limitations (iOS Platform Rules)**
 
 * iOS does **not allow blocking** the screenshot action.
 
