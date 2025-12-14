@@ -49,78 +49,17 @@ ScreenshotProtectedView {
 
 ---
 
-## **C. Detect Screenshots**
-
-You can listen for the system screenshot notification:
-
-```swift
-.onReceive(
-    NotificationCenter.default.publisher(
-        for: UIApplication.userDidTakeScreenshotNotification
-    )
-) { _ in
-    // Handle screenshot here
-    // e.g., clear sensitive state, navigate away, lock screen, etc.
-}
-```
-
+ 
 ---
 
-## **D. Detect Screen-Recording or Mirroring**
+## **C. Detect Screen-Recording or Mirroring**
 
 iOS provides:
 
 ```swift
 UIScreen.main.isCaptured
 ```
-
-And a notification:
-
-```swift
-UIScreen.capturedDidChangeNotification
-```
-
-Usage:
-
-```swift
-.onReceive(
-    NotificationCenter.default.publisher(
-        for: UIScreen.capturedDidChangeNotification
-    )
-) { _ in
-    let isRecording = UIScreen.main.isCaptured
-
-    if isRecording {
-        // Screen recording or mirroring started
-        // Option: hide UI or show black overlay
-    } else {
-        // Recording stopped
-    }
-}
-```
-
-### Example: hide UI during recording
-
-```swift
-if UIScreen.main.isCaptured {
-    Color.black.ignoresSafeArea()   // Hide everything
-} else {
-    ScreenshotProtectedView {
-        YourMainView()
-    }
-}
-```
-
----
-
-#  **Component Overview (Toast-Free Version)**
-
-## **1. ScreenshotProtectedView**
-
-* Type: `UIViewRepresentable`
-* Wraps a SwiftUI view inside a secure UIKit view.
-* Prevents protected content from being visible in screenshots.
-
+ 
 **Use it for:**
 
 * Banking information
@@ -130,19 +69,8 @@ if UIScreen.main.isCaptured {
 * Confidential business data
 
 ---
-
-## **2. ProtectedView (UIKit Core)**
-
-* A custom UIKit view used internally.
-* Contains a `UITextField` with `isSecureTextEntry = true`.
-* SwiftUI content is placed inside the secure area of that text field.
-* iOS does not include secure text content in screenshots.
-
-You **do not** normally need to interact with this directly.
-
----
-
-## **3. Screenshot Detection Logic**
+  
+## **2. Screenshot Detection Logic**
 
 ### iOS sends a notification **after** the screenshot is taken:
 
@@ -154,7 +82,7 @@ Use `.onReceive` to respond.
 
 ---
 
-## **4. Screen Recording Detection Logic**
+## **3. Screen Recording Detection Logic**
 
 ### To know if the screen is recorded or mirrored:
 
@@ -166,20 +94,7 @@ To detect changes:
 
 ```swift
 UIScreen.capturedDidChangeNotification
-```
-
-Apps often hide sensitive UI while recording:
-
-```swift
-if UIScreen.main.isCaptured {
-    Color.black.ignoresSafeArea()
-} else {
-    ScreenshotProtectedView {
-        SecureContent()
-    }
-}
-```
-
+``` 
 ---
 
 #   **How to Integrate Into Another Project**
@@ -204,20 +119,7 @@ ScreenshotProtectedView {
     }
 }
 ```
-
-### **Step 4 — Add screenshot/recording detection (optional)**
-
-```swift
-.onReceive(NotificationCenter.default.publisher(for: UIApplication.userDidTakeScreenshotNotification)) { _ in
-    // handle screenshot
-}
-
-.onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
-    let recording = UIScreen.main.isCaptured
-}
-```
-
----
+ 
 
 # x **Limitations (iOS Platform Rules)**
 
